@@ -1,50 +1,57 @@
-import React from "react";
-import { useState } from "react";
-
+import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
-  const notify = () => {
-    toast.error("faqat LLll,RRrr,BBbb,TTtt harflaridan foydalaning");
+  const notify = (message) => {
+    toast.error(message);
   };
 
   const [command, setCommand] = useState("");
-  const [value, setValue] = useState("");
   const [top, setTop] = useState(0);
-  const [bottom, setBottom] = useState(0);
   const [left, setLeft] = useState(0);
-  const [right, setRight] = useState(0);
 
-  console.log(top);
-  console.log(bottom);
-  console.log(left);
-  console.log(right);
-
-  const [commandHistory, setCommandHistory] = useState([
-    {
-      original: "LLRRTTBB",
-      optimized: "ЗПЗНЗПЗНО",
-      timestamp: "20/11/2024, 07:36:15",
-      before: "(0, 0)",
-      after: "(0, 2)",
-    },
-  ]);
+  const [commandHistory, setCommandHistory] = useState([]);
 
   const handleExecuteCommand = () => {
-    for (let i = 0; i <= command.length; i++) {
-      
-      if ((command[i] == "l", "L")) {
-        setRight(right + 127);
-      }
-      if ((command[i] == "t", "T")) {
-        setBottom(bottom + 47);
-      }
-      if ((command[i] == "r", "R")) {
-        setLeft(left + 127);
-      }
-      if ((command[i] == "B", "b")) {
-        setTop(top + 47);
+    let newTop = top;
+    let newLeft = left;
+
+    for (let i = 0; i < command.length; i++) {
+      const char = command[i].toLowerCase();
+
+      switch (char) {
+        case "l":
+          if (newLeft - 127 < 0) {
+            notify("Chapga harakatlanib bo'lmaydi, chegaradan chiqib ketmoqda!");
+            return;
+          }
+          newLeft -= 127; // Move left
+          break;
+        case "t":
+          if (newTop - 47 < 0) {
+            notify("Yuqoriga harakatlanib bo'lmaydi, chegaradan chiqib ketmoqda!");
+            return;
+          }
+          newTop -= 47; // Move top (up)
+          break;
+        case "r":
+          if (newLeft + 127 > 1200) { // Example limit, depends on your grid size
+            notify("O'ngga harakatlanib bo'lmaydi, chegaradan chiqib ketmoqda!");
+            return;
+          }
+          newLeft += 127; // Move right
+          break;
+        case "b":
+          if (newTop + 47 > 600) { // Example limit, depends on your grid size
+            notify("Pastga harakatlanib bo'lmaydi, chegaradan chiqib ketmoqda!");
+            return;
+          }
+          newTop += 47; // Move bottom (down)
+          break;
+        default:
+          notify("faqat LLll,RRrr,BBbb,TTtt harflaridan foydalaning");
+          return;
       }
     }
 
@@ -54,22 +61,24 @@ function App() {
         ...prevHistory,
         {
           original: command,
-          optimized: "ЗПЗНЗПЗНО",
+          optimized: "ЗПЗНЗПЗНО", // Placeholder for optimized result
           timestamp: currentTimestamp,
-          before: "(0, 2)",
-          after: "(0, 2)",
+          before: `(${top}, ${left})`,
+          after: `(${newTop}, ${newLeft})`,
         },
       ]);
+      setTop(newTop);
+      setLeft(newLeft);
       setCommand("");
     }
   };
 
   const handleInputChange = (e) => {
-    const allowedChars = /^[L, R, B, T, t,b,r,l]*$/;
+    const allowedChars = /^[lLrRbBtT]*$/;
     if (allowedChars.test(e.target.value)) {
       setCommand(e.target.value);
     } else {
-      notify();
+      notify("faqat LLll,RRrr,BBbb,TTtt harflaridan foydalaning");
     }
   };
 
@@ -80,19 +89,20 @@ function App() {
         <h1 className="text-2xl font-bold mb-4 text-center">
           Laboratory Manipulator Control
         </h1>
-        <div className={`grid grid-cols-9 gap-2 mb-4 relative mt-${top} mb-${bottom} mr-${right}`}>
+        <div className={`grid grid-cols-9 gap-2 mb-4 relative`}>
           <div
             className="w-[120px] h-[40px] text-white text-center absolute bg-red-700"
+            style={{
+              left: `${left}px`,
+              top: `${top}px`,
+              transition: "left 0.5s ease, top 0.5s ease",
+            }}
           >
             robot
           </div>
 
           {Array.from({ length: 45 }).map((_, i) => (
-            <div
-              onClick={(e) => setValue(e.target.textContent)}
-              key={i}
-              className="bg-green-700 py-2 text-center"
-            >
+            <div key={i} className="bg-green-700 py-2 text-center">
               {i + 1}
             </div>
           ))}
@@ -102,7 +112,7 @@ function App() {
             type="text"
             placeholder="Enter Command"
             value={command}
-            onChange={handleInputChange} // Input qiymatini cheklash uchun
+            onChange={handleInputChange}
             className="border rounded-md py-2 px-4 w-full"
           />
           <button
@@ -145,5 +155,3 @@ function App() {
 }
 
 export default App;
-
-
